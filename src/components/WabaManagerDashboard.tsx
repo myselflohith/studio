@@ -38,14 +38,34 @@ export function WabaManagerDashboard() {
               <AnalyticsSummary />
             </TabsContent>
             <TabsContent value="userManagement" className="mt-6">
-              <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-1">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Create User</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Link href="/users">
+                      <Button>Go to Create User</Button>
+                    </Link>
+                  </CardContent>
+                </Card>
                 <Card>
                   <CardHeader>
                     <CardTitle>Manage Users</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <Link href="/users">
-                      <Button>Go to User Management</Button>
+                    <Link href="/users/manage">
+                      <Button>Go to Manage Users</Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Add Balance</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Link href="/users/balance">
+                      <Button>Go to Add Balance</Button>
                     </Link>
                   </CardContent>
                 </Card>
