@@ -3,11 +3,11 @@
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
 import {useEffect, useState} from "react";
 import {UserCreationForm} from "@/components/UserCreationForm";
-import {UserManagement} from "@/components/UserManagement";
-import {BalanceManagement} from "@/components/BalanceManagement";
 import {TemplateDetailsDisplay} from "@/components/TemplateDetailsDisplay";
 import {AnalyticsSummary} from "@/components/AnalyticsSummary";
 import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
+import Link from "next/link";
+import {Button} from "@/components/ui/button";
 
 export function WabaManagerDashboard() {
   const [activeTab, setActiveTab] = useState("analytics");
@@ -50,18 +50,22 @@ export function WabaManagerDashboard() {
                 </Card>
                 <Card>
                   <CardHeader>
-                    <CardTitle>User Management</CardTitle>
+                    <CardTitle>Manage Users</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <UserManagement />
+                    <Link href="/users">
+                      <Button>Go to User List</Button>
+                    </Link>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardHeader>
-                    <CardTitle>Balance Management</CardTitle>
+                    <CardTitle>Add Balance</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <BalanceManagement />
+                    <Link href="/balance">
+                      <Button>Go to Add Balance</Button>
+                    </Link>
                   </CardContent>
                 </Card>
               </div>
@@ -75,3 +79,4 @@ export function WabaManagerDashboard() {
     </div>
   );
 }
+
