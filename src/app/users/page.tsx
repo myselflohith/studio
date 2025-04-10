@@ -21,7 +21,7 @@ const mockUsers: User[] = [
   {id: '3', name: 'Alice Johnson', isActive: true},
 ];
 
-export default function UserListPage() {
+export default function UserManagementPage() {
   const [users, setUsers] = useState<User[]>(mockUsers);
   const [message, setMessage] = useState<string | null>(null);
   const [email, setEmail] = useState('');

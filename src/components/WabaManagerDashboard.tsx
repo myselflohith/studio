@@ -2,7 +2,6 @@
 
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
 import {useEffect, useState} from "react";
-import {UserCreationForm} from "@/components/UserCreationForm";
 import {TemplateDetailsDisplay} from "@/components/TemplateDetailsDisplay";
 import {AnalyticsSummary} from "@/components/AnalyticsSummary";
 import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
@@ -39,32 +38,14 @@ export function WabaManagerDashboard() {
               <AnalyticsSummary />
             </TabsContent>
             <TabsContent value="userManagement" className="mt-6">
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Create New User</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <UserCreationForm />
-                  </CardContent>
-                </Card>
+              <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-1">
                 <Card>
                   <CardHeader>
                     <CardTitle>Manage Users</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <Link href="/users">
-                      <Button>Go to User List</Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Add Balance</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Link href="/balance">
-                      <Button>Go to Add Balance</Button>
+                      <Button>Go to User Management</Button>
                     </Link>
                   </CardContent>
                 </Card>
@@ -79,4 +60,3 @@ export function WabaManagerDashboard() {
     </div>
   );
 }
-
