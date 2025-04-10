@@ -15,7 +15,17 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 
 interface User {
   id: string;
@@ -128,6 +138,19 @@ export default function AddBalancePage() {
     setSelectedUserId(userId);
   };
 
+  const chartData = transactions.map(transaction => ({
+    date: transaction.date,
+    credit: transaction.type === 'credit' ? transaction.amount : 0,
+    debit: transaction.type === 'debit' ? transaction.amount : 0,
+    refund: transaction.type === 'refund' ? transaction.amount : 0,
+    available: transactions.filter(t => t.date <= transaction.date).reduce((acc, t) => {
+      if (t.type === 'credit') return acc + t.amount;
+      if (t.type === 'debit') return acc - t.amount;
+      if (t.type === 'refund') return acc + t.amount;
+      return acc;
+    }, 0)
+  }));
+
   return (
     <div className="container mx-auto py-10 grid gap-4">
       <Card>
@@ -176,6 +199,21 @@ export default function AddBalancePage() {
               <p>Total Refund: ${totalRefund}</p>
               <p>Available Balance: ${availableBalance}</p>
             </div>
+
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={chartData} margin={{top: 5, right: 30, left: 20, bottom: 5}}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="credit" stroke="#82ca9d" />
+                <Line type="monotone" dataKey="debit" stroke="#8884d8" />
+                <Line type="monotone" dataKey="refund" stroke="#ffc658" />
+                <Line type="monotone" dataKey="available" stroke="#007BFF" />
+              </LineChart>
+            </ResponsiveContainer>
+
             <Table>
               <TableHeader>
                 <TableRow>
