@@ -2,9 +2,17 @@
 
 import {useState} from 'react';
 import {Switch} from '@/components/ui/switch';
-import {Label} from '@/components/ui/label';
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {useToast} from "@/hooks/use-toast";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface User {
   id: string;
@@ -43,7 +51,6 @@ export default function ManageUsersPage() {
     });
   };
 
-
   return (
     <div className="container mx-auto py-10 grid gap-4">
       <Card>
@@ -51,24 +58,34 @@ export default function ManageUsersPage() {
           <CardTitle>Manage Users</CardTitle>
         </CardHeader>
         <CardContent>
-          {users.map(user => (
-            <div key={user.id} className="flex items-center justify-between space-x-4 py-2">
-              <div>
-                <div>{user.name} (ID: {user.id})</div>
-                <div>Email: {user.email}</div>
-                <div>WABA ID: {user.wabaId}</div>
-                <div>Phone Number ID: {user.phoneNumberId}</div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Label htmlFor={`active-${user.id}`}>Active:</Label>
-                <Switch
-                  id={`active-${user.id}`}
-                  checked={user.isActive}
-                  onCheckedChange={checked => handleToggleActive(user.id, checked)}
-                />
-              </div>
-            </div>
-          ))}
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>WABA ID</TableHead>
+                <TableHead>Phone Number ID</TableHead>
+                <TableHead>Active</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {users.map(user => (
+                <TableRow key={user.id}>
+                  <TableCell>{user.name}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.wabaId}</TableCell>
+                  <TableCell>{user.phoneNumberId}</TableCell>
+                  <TableCell>
+                    <Switch
+                      id={`active-${user.id}`}
+                      checked={user.isActive}
+                      onCheckedChange={checked => handleToggleActive(user.id, checked)}
+                    />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
           {message && <p className="text-sm text-green-500">{message}</p>}
         </CardContent>
       </Card>
