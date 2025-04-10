@@ -4,6 +4,7 @@ import {useState} from "react";
 import {Switch} from "@/components/ui/switch";
 import {Label} from "@/components/ui/label";
 import {Card} from "@/components/ui/card";
+import {Button} from "@/components/ui/button";
 
 export function UserManagement() {
   const [userId, setUserId] = useState("");
