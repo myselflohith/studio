@@ -30,7 +30,7 @@ export default function UserManagementPage() {
   const [pricingTier, setPricingTier] = useState('');
   const [wabaId, setWabaId] = useState('');
   const [phoneNumberId, setPhoneNumberId] = useState('');
-  const [userId, setUserId] = useState('');
+  const [selectedUserId, setSelectedUserId] = useState<string | undefined>(undefined);
   const [balanceToAdd, setBalanceToAdd] = useState('');
 
   const {toast} = useToast();
@@ -45,11 +45,21 @@ export default function UserManagementPage() {
       })
     );
     setMessage(`User ${userId} is now ${checked ? 'active' : 'inactive'}`);
+
+    toast({
+      title: "User Status Updated",
+      description: `User ${userId} is now ${checked ? 'active' : 'inactive'}`,
+    });
   };
 
   const handleSubmit = () => {
     if (!email || !password || !name || !pricingTier || !wabaId || !phoneNumberId) {
       setMessage('Please fill in all fields.');
+      toast({
+        title: "Error",
+        description: "Please fill in all fields.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -79,27 +89,32 @@ export default function UserManagementPage() {
   };
 
   const handleAddBalance = () => {
-    if (!userId || !balanceToAdd) {
+    if (!selectedUserId || !balanceToAdd) {
       setMessage('Please enter User ID and Balance.');
+      toast({
+        title: "Error",
+        description: "Please enter User ID and Balance.",
+        variant: "destructive",
+      });
       return;
     }
 
     // Simulate adding balance to user
-    console.log(`Adding $${balanceToAdd} to user ${userId}`);
-    setMessage(`Successfully added $${balanceToAdd} to user ${userId}`);
+    console.log(`Adding $${balanceToAdd} to user ${selectedUserId}`);
+    setMessage(`Successfully added $${balanceToAdd} to user ${selectedUserId}`);
 
     toast({
       title: "Balance Added",
-      description: `Successfully added $${balanceToAdd} to user ${userId}`,
+      description: `Successfully added $${balanceToAdd} to user ${selectedUserId}`,
     });
 
     // Clear the input fields
-    setUserId('');
+    setSelectedUserId(undefined);
     setBalanceToAdd('');
   };
 
   return (
-    <div className="container mx-auto py-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="container mx-auto py-10 grid gap-4">
       <Card>
         <CardHeader>
           <CardTitle>Create New User</CardTitle>
@@ -196,13 +211,18 @@ export default function UserManagementPage() {
         </CardHeader>
         <CardContent className="flex flex-col space-y-4">
           <Label htmlFor="userId">User ID:</Label>
-          <Input
-            type="text"
-            id="userId"
-            value={userId}
-            onChange={e => setUserId(e.target.value)}
-            placeholder="Enter User ID"
-          />
+          <Select onValueChange={value => setSelectedUserId(value)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select a User ID" />
+            </SelectTrigger>
+            <SelectContent>
+              {users.map(user => (
+                <SelectItem key={user.id} value={user.id}>
+                  {user.id} - {user.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
           <Label htmlFor="balance">Balance to Add:</Label>
           <Input
