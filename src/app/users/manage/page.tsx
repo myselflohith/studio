@@ -218,52 +218,52 @@ export default function ManageUsersPage() {
               </Table>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Search Campaigns by Phone Number</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col space-y-4">
+              <Input
+                type="text"
+                placeholder="Enter Phone Number"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+              />
+              <Button onClick={handleSearch}>Search</Button>
+
+              {searchResults.length > 0 && (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Campaign ID</TableHead>
+                      <TableHead>Template Name</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Sent At</TableHead>
+                      <TableHead>Updated At</TableHead>
+                      <TableHead>Chat Preview</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {searchResults.map((result) => (
+                      <TableRow key={result.campaignId}>
+                        <TableCell>{result.campaignId}</TableCell>
+                        <TableCell>{result.templateName}</TableCell>
+                        <TableCell>{result.status}</TableCell>
+                        <TableCell>{result.sentAt}</TableCell>
+                        <TableCell>{result.updatedAt}</TableCell>
+                        <TableCell>
+                          <Button>View</Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
         </>
       )}
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Search Campaigns by Phone Number</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col space-y-4">
-          <Input
-            type="text"
-            placeholder="Enter Phone Number"
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-          />
-          <Button onClick={handleSearch}>Search</Button>
-
-          {searchResults.length > 0 && (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Campaign ID</TableHead>
-                  <TableHead>Template Name</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Sent At</TableHead>
-                  <TableHead>Updated At</TableHead>
-                  <TableHead>Chat Preview</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {searchResults.map((result) => (
-                  <TableRow key={result.campaignId}>
-                    <TableCell>{result.campaignId}</TableCell>
-                    <TableCell>{result.templateName}</TableCell>
-                    <TableCell>{result.status}</TableCell>
-                    <TableCell>{result.sentAt}</TableCell>
-                    <TableCell>{result.updatedAt}</TableCell>
-                    <TableCell>
-                      <Button>View</Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }
