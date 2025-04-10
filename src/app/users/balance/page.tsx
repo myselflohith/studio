@@ -1,6 +1,6 @@
 'use client';
 
-import {useState} from 'react';
+import {useState, useEffect} from 'react';
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
@@ -28,6 +28,7 @@ interface Transaction {
   type: 'credit' | 'debit' | 'refund';
   amount: number;
   date: string;
+  userId: string; // Add userId to Transaction interface
 }
 
 const mockUsers: User[] = [
@@ -37,10 +38,12 @@ const mockUsers: User[] = [
 ];
 
 const mockTransactions: Transaction[] = [
-  {id: '1', type: 'credit', amount: 100, date: '2024-01-01'},
-  {id: '2', type: 'debit', amount: 50, date: '2024-01-05'},
-  {id: '3', type: 'refund', amount: 20, date: '2024-01-10'},
-  {id: '4', type: 'credit', amount: 150, date: '2024-01-15'},
+  {id: '1', type: 'credit', amount: 100, date: '2024-01-01', userId: '1'},
+  {id: '2', type: 'debit', amount: 50, date: '2024-01-05', userId: '1'},
+  {id: '3', type: 'refund', amount: 20, date: '2024-01-10', userId: '1'},
+  {id: '4', type: 'credit', amount: 150, date: '2024-01-15', userId: '2'},
+  {id: '5', type: 'debit', amount: 30, date: '2024-01-20', userId: '2'},
+  {id: '6', type: 'credit', amount: 200, date: '2024-01-25', userId: '3'},
 ];
 
 export default function AddBalancePage() {
@@ -50,7 +53,46 @@ export default function AddBalancePage() {
   const [balanceToAdd, setBalanceToAdd] = useState('');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
+  const [totalCredit, setTotalCredit] = useState(0);
+  const [totalDebit, setTotalDebit] = useState(0);
+  const [totalRefund, setTotalRefund] = useState(0);
+  const [availableBalance, setAvailableBalance] = useState(0);
+
   const {toast} = useToast();
+
+  useEffect(() => {
+    if (selectedUserId) {
+      const userTransactions = mockTransactions.filter(transaction => transaction.userId === selectedUserId);
+      setTransactions(userTransactions);
+
+      // Calculate totals
+      const credit = userTransactions
+        .filter(transaction => transaction.type === 'credit')
+        .reduce((sum, transaction) => sum + transaction.amount, 0);
+      setTotalCredit(credit);
+
+      const debit = userTransactions
+        .filter(transaction => transaction.type === 'debit')
+        .reduce((sum, transaction) => sum + transaction.amount, 0);
+      setTotalDebit(debit);
+
+      const refund = userTransactions
+        .filter(transaction => transaction.type === 'refund')
+        .reduce((sum, transaction) => sum + transaction.amount, 0);
+      setTotalRefund(refund);
+
+      setAvailableBalance(credit - debit + refund);
+
+    } else {
+      setTransactions([]);
+      setTotalCredit(0);
+      setTotalDebit(0);
+      setTotalRefund(0);
+      setAvailableBalance(0);
+    }
+  }, [selectedUserId]);
+
+
 
   const handleAddBalance = () => {
     if (!selectedUserId || !balanceToAdd) {
@@ -76,13 +118,14 @@ export default function AddBalancePage() {
     setSelectedUserId(undefined);
     setBalanceToAdd('');
     setTransactions([]); // Clear transactions after adding balance
+    setTotalCredit(0);
+    setTotalDebit(0);
+    setTotalRefund(0);
+    setAvailableBalance(0);
   };
 
   const handleUserSelect = (userId: string) => {
     setSelectedUserId(userId);
-    // Fetch transaction history for the selected user
-    const userTransactions = mockTransactions.filter(transaction => transaction.id === userId);
-    setTransactions(mockTransactions);
   };
 
   return (
@@ -127,6 +170,12 @@ export default function AddBalancePage() {
             <CardTitle>Transaction History for User ID: {selectedUserId}</CardTitle>
           </CardHeader>
           <CardContent>
+            <div className="mb-4">
+              <p>Total Credit: ${totalCredit}</p>
+              <p>Total Debit: ${totalDebit}</p>
+              <p>Total Refund: ${totalRefund}</p>
+              <p>Available Balance: ${availableBalance}</p>
+            </div>
             <Table>
               <TableHeader>
                 <TableRow>
