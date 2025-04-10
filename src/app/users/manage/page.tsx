@@ -10,12 +10,15 @@ interface User {
   id: string;
   name: string;
   isActive: boolean;
+  email: string;
+  wabaId: string;
+  phoneNumberId: string;
 }
 
 const mockUsers: User[] = [
-  {id: '1', name: 'John Doe', isActive: true},
-  {id: '2', name: 'Jane Smith', isActive: false},
-  {id: '3', name: 'Alice Johnson', isActive: true},
+  {id: '1', name: 'John Doe', isActive: true, email: 'john.doe@example.com', wabaId: 'waba123', phoneNumberId: 'phone123'},
+  {id: '2', name: 'Jane Smith', isActive: false, email: 'jane.smith@example.com', wabaId: 'waba456', phoneNumberId: 'phone456'},
+  {id: '3', name: 'Alice Johnson', isActive: true, email: 'alice.johnson@example.com', wabaId: 'waba789', phoneNumberId: 'phone789'},
 ];
 
 export default function ManageUsersPage() {
@@ -50,7 +53,12 @@ export default function ManageUsersPage() {
         <CardContent>
           {users.map(user => (
             <div key={user.id} className="flex items-center justify-between space-x-4 py-2">
-              <div>{user.name} (ID: {user.id})</div>
+              <div>
+                <div>{user.name} (ID: {user.id})</div>
+                <div>Email: {user.email}</div>
+                <div>WABA ID: {user.wabaId}</div>
+                <div>Phone Number ID: {user.phoneNumberId}</div>
+              </div>
               <div className="flex items-center space-x-2">
                 <Label htmlFor={`active-${user.id}`}>Active:</Label>
                 <Switch
