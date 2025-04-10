@@ -13,6 +13,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {Input} from "@/components/ui/input";
+import {Button} from "@/components/ui/button";
 
 interface User {
   id: string;
@@ -62,11 +64,18 @@ const mockPayments: Payment[] = [
   {id: 'payment3', method: 'Credit Card', type: 'refund', amount: 20, campaignId: 'campaign3', date: '2024-07-22'},
 ];
 
+const mockSearchResults = [
+  {campaignId: '123', templateName: 'Promo', status: 'Sent', sentAt: '2024-08-01 10:00', updatedAt: '2024-08-01 10:05'},
+  {campaignId: '456', templateName: 'Update', status: 'Delivered', sentAt: '2024-08-02 14:00', updatedAt: '2024-08-02 14:10'},
+];
+
 export default function ManageUsersPage() {
   const [users, setUsers] = useState<User[]>(mockUsers);
   const [message, setMessage] = useState<string | null>(null);
   const {toast} = useToast();
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [searchResults, setSearchResults] = useState(mockSearchResults);
 
   const handleToggleActive = (userId: string, checked: boolean) => {
     setUsers(
@@ -91,6 +100,13 @@ export default function ManageUsersPage() {
 
   const userCampaigns = selectedUser ? mockCampaigns : [];
   const userPayments = selectedUser ? mockPayments.filter(payment => userCampaigns.some(campaign => campaign.id === payment.campaignId)) : [];
+
+  const handleSearch = () => {
+    // Implement search logic here
+    console.log(`Searching for phone number: ${phoneNumber}`);
+    // setSearchResults([{campaignId: '123', templateName: 'Template', status: 'Delivered', sentAt: '2024-01-01', updatedAt: '2024-01-01'}])
+    // In a real application, you would fetch data from an API here
+  };
 
   return (
     <div className="container mx-auto py-10 grid gap-4">
@@ -204,6 +220,50 @@ export default function ManageUsersPage() {
           </Card>
         </>
       )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Search Campaigns by Phone Number</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col space-y-4">
+          <Input
+            type="text"
+            placeholder="Enter Phone Number"
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+          />
+          <Button onClick={handleSearch}>Search</Button>
+
+          {searchResults.length > 0 && (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Campaign ID</TableHead>
+                  <TableHead>Template Name</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Sent At</TableHead>
+                  <TableHead>Updated At</TableHead>
+                  <TableHead>Chat Preview</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {searchResults.map((result) => (
+                  <TableRow key={result.campaignId}>
+                    <TableCell>{result.campaignId}</TableCell>
+                    <TableCell>{result.templateName}</TableCell>
+                    <TableCell>{result.status}</TableCell>
+                    <TableCell>{result.sentAt}</TableCell>
+                    <TableCell>{result.updatedAt}</TableCell>
+                    <TableCell>
+                      <Button>View</Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
