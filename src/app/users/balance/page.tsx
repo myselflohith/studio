@@ -1,16 +1,16 @@
+
 'use client';
 
-import {useState, useEffect} from 'react';
-import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
-import {Button} from '@/components/ui/button';
-import {Input} from '@/components/ui/input';
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@/components/ui/select';
-import {Label} from "@/components/ui/label";
-import {useToast} from "@/hooks/use-toast";
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -31,82 +31,130 @@ interface User {
   id: string;
   name: string;
   isActive: boolean;
+  email: string;
+  wabaId: string;
+  phoneNumberId: string;
 }
 
 interface Transaction {
-  id: string;
-  type: 'credit' | 'debit' | 'refund';
-  amount: number;
-  date: string;
-  userId: string; // Add userId to Transaction interface
+  payment_id: number;
+  user_id: number;
+  payment_method: string;
+  payment_date: string;
+  transaction_type: 'credit' | 'debit' | 'refund';
+  amount: string;
+  campaign_id: number;
 }
 
-const mockUsers: User[] = [
-  {id: '1', name: 'John Doe', isActive: true},
-  {id: '2', name: 'Jane Smith', isActive: false},
-  {id: '3', name: 'Alice Johnson', isActive: true},
-];
-
-const mockTransactions: Transaction[] = [
-  {id: '1', type: 'credit', amount: 100, date: '2024-01-01', userId: '1'},
-  {id: '2', type: 'debit', amount: 50, date: '2024-01-05', userId: '1'},
-  {id: '3', type: 'refund', amount: 20, date: '2024-01-10', userId: '1'},
-  {id: '4', type: 'credit', amount: 150, date: '2024-01-15', userId: '2'},
-  {id: '5', type: 'debit', amount: 30, date: '2024-01-20', userId: '2'},
-  {id: '6', type: 'credit', amount: 200, date: '2024-01-25', userId: '3'},
-];
+const formatINR = (value: string | number): string =>
+  new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(value));
 
 export default function AddBalancePage() {
-  const [users, setUsers] = useState<User[]>(mockUsers);
-  const [message, setMessage] = useState<string | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [paymentTotals, setPaymentTotals] = useState({ credit: '0', debit: '0', refund: '0' });
   const [selectedUserId, setSelectedUserId] = useState<string | undefined>(undefined);
   const [balanceToAdd, setBalanceToAdd] = useState('');
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [availableBalance, setAvailableBalance] = useState<string>('0');
+  const [message, setMessage] = useState<string | null>(null);
 
-  const [totalCredit, setTotalCredit] = useState(0);
-  const [totalDebit, setTotalDebit] = useState(0);
-  const [totalRefund, setTotalRefund] = useState(0);
-  const [availableBalance, setAvailableBalance] = useState(0);
-
-  const {toast} = useToast();
+  const { toast } = useToast();
 
   useEffect(() => {
-    if (selectedUserId) {
-      const userTransactions = mockTransactions.filter(transaction => transaction.userId === selectedUserId);
-      setTransactions(userTransactions);
+    const fetchUsers = async () => {
+      try {
+        const response = await fetch(process.env.NEXT_PUBLIC_USERS_API as string, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_AUTH_TOKEN}`,
+          },
+          body: JSON.stringify({ page: 1, limit: 100 }),
+        });
 
-      // Calculate totals
-      const credit = userTransactions
-        .filter(transaction => transaction.type === 'credit')
-        .reduce((sum, transaction) => sum + transaction.amount, 0);
-      setTotalCredit(credit);
+        const json = await response.json();
+        const mappedUsers: User[] = json.data.map((user: any) => ({
+          id: user.id.toString(),
+          name: user.name,
+          isActive: user.status === 1,
+          email: user.email,
+          wabaId: user.waba_id?.toString() || '',
+          phoneNumberId: user.phone_number_id?.toString() || '',
+        }));
 
-      const debit = userTransactions
-        .filter(transaction => transaction.type === 'debit')
-        .reduce((sum, transaction) => sum + transaction.amount, 0);
-      setTotalDebit(debit);
+        setUsers(mappedUsers);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to fetch user data.",
+          variant: "destructive",
+        });
+      }
+    };
 
-      const refund = userTransactions
-        .filter(transaction => transaction.type === 'refund')
-        .reduce((sum, transaction) => sum + transaction.amount, 0);
-      setTotalRefund(refund);
+    fetchUsers();
+  }, []);
 
-      setAvailableBalance(credit - debit + refund);
+  useEffect(() => {
+    if (!selectedUserId) return;
 
-    } else {
-      setTransactions([]);
-      setTotalCredit(0);
-      setTotalDebit(0);
-      setTotalRefund(0);
-      setAvailableBalance(0);
-    }
+    const fetchTransactions = async () => {
+      try {
+        const response = await fetch(process.env.NEXT_PUBLIC_PAYMENTS_API as string, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_AUTH_TOKEN}`,
+          },
+          body: JSON.stringify({
+            user_id: selectedUserId,
+            page: 1,
+            limit: 100,
+          }),
+        });
+
+        const data = await response.json();
+        setTransactions(data.data || []);
+        setPaymentTotals(data.totals || { credit: '0', debit: '0', refund: '0' });
+      } catch (err) {
+        toast({
+          title: "Error",
+          description: "Failed to fetch transactions.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    const fetchAvailableBalance = async () => {
+      try {
+        const res = await fetch('https://dev-portal.whatsappalerts.com:3007/api/v1/user/balance', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_AUTH_TOKEN}`,
+          },
+          body: JSON.stringify({
+            user_id: parseInt(selectedUserId),
+          }),
+        });
+
+        const result = await res.json();
+        setAvailableBalance(result.balance?.toString() || '0');
+      } catch (err) {
+        toast({
+          title: "Error",
+          description: "Failed to fetch available balance.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchTransactions();
+    fetchAvailableBalance();
   }, [selectedUserId]);
 
-
-
-  const handleAddBalance = () => {
+  const handleAddBalance = async () => {
     if (!selectedUserId || !balanceToAdd) {
-      setMessage('Please enter User ID and Balance.');
       toast({
         title: "Error",
         description: "Please enter User ID and Balance.",
@@ -115,40 +163,49 @@ export default function AddBalancePage() {
       return;
     }
 
-    // Simulate adding balance to user
-    console.log(`Adding $${balanceToAdd} to user ${selectedUserId}`);
-    setMessage(`Successfully added $${balanceToAdd} to user ${selectedUserId}`);
+    try {
+      const response = await fetch('https://dev-portal.whatsappalerts.com:3007/api/v1/user/add-balance', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_AUTH_TOKEN}`,
+        },
+        body: JSON.stringify({
+          user_id: parseInt(selectedUserId),
+          amount: parseFloat(balanceToAdd),
+        }),
+      });
 
-    toast({
-      title: "Balance Added",
-      description: `Successfully added $${balanceToAdd} to user ${selectedUserId}`,
-    });
+      const result = await response.json();
 
-    // Clear the input fields
-    setSelectedUserId(undefined);
-    setBalanceToAdd('');
-    setTransactions([]); // Clear transactions after adding balance
-    setTotalCredit(0);
-    setTotalDebit(0);
-    setTotalRefund(0);
-    setAvailableBalance(0);
+      if (!response.ok) throw new Error(result.message || 'Failed to add balance');
+
+      toast({
+        title: "Success",
+        description: `Successfully added ₹${balanceToAdd} to user ${selectedUserId}`,
+      });
+
+      setMessage(`Successfully added ₹${balanceToAdd} to user ${selectedUserId}`);
+      setBalanceToAdd('');
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to add balance.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleUserSelect = (userId: string) => {
     setSelectedUserId(userId);
   };
 
-  const chartData = transactions.map(transaction => ({
-    date: transaction.date,
-    credit: transaction.type === 'credit' ? transaction.amount : 0,
-    debit: transaction.type === 'debit' ? transaction.amount : 0,
-    refund: transaction.type === 'refund' ? transaction.amount : 0,
-    available: transactions.filter(t => t.date <= transaction.date).reduce((acc, t) => {
-      if (t.type === 'credit') return acc + t.amount;
-      if (t.type === 'debit') return acc - t.amount;
-      if (t.type === 'refund') return acc + t.amount;
-      return acc;
-    }, 0)
+  const chartData = transactions.map(t => ({
+    date: new Date(t.payment_date).toISOString().split('T')[0],
+    credit: t.transaction_type === 'credit' ? parseFloat(t.amount) : 0,
+    debit: t.transaction_type === 'debit' ? parseFloat(t.amount) : 0,
+    refund: t.transaction_type === 'refund' ? parseFloat(t.amount) : 0,
+    available: 0
   }));
 
   return (
@@ -194,14 +251,14 @@ export default function AddBalancePage() {
           </CardHeader>
           <CardContent>
             <div className="mb-4">
-              <p>Total Credit: ${totalCredit}</p>
-              <p>Total Debit: ${totalDebit}</p>
-              <p>Total Refund: ${totalRefund}</p>
-              <p>Available Balance: ${availableBalance}</p>
+              <p>Total Credit: {formatINR(paymentTotals.credit)}</p>
+              <p>Total Debit: {formatINR(paymentTotals.debit)}</p>
+              <p>Total Refund: {formatINR(paymentTotals.refund)}</p>
+              <p><strong>Available Balance: {formatINR(availableBalance)}</strong></p>
             </div>
 
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={chartData} margin={{top: 5, right: 30, left: 20, bottom: 5}}>
+              <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" />
                 <YAxis />
@@ -210,7 +267,6 @@ export default function AddBalancePage() {
                 <Line type="monotone" dataKey="credit" stroke="#82ca9d" />
                 <Line type="monotone" dataKey="debit" stroke="#8884d8" />
                 <Line type="monotone" dataKey="refund" stroke="#ffc658" />
-                <Line type="monotone" dataKey="available" stroke="#007BFF" />
               </LineChart>
             </ResponsiveContainer>
 
@@ -223,19 +279,13 @@ export default function AddBalancePage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {transactions.length > 0 ? (
-                  transactions.map(transaction => (
-                    <TableRow key={transaction.id}>
-                      <TableCell>{transaction.type}</TableCell>
-                      <TableCell>{transaction.amount}</TableCell>
-                      <TableCell>{transaction.date}</TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={3}>No transactions found.</TableCell>
+                {transactions.map(t => (
+                  <TableRow key={t.payment_id}>
+                    <TableCell>{t.transaction_type}</TableCell>
+                    <TableCell>{formatINR(t.amount)}</TableCell>
+                    <TableCell>{new Date(t.payment_date).toLocaleDateString()}</TableCell>
                   </TableRow>
-                )}
+                ))}
               </TableBody>
             </Table>
           </CardContent>

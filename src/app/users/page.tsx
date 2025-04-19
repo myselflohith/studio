@@ -1,12 +1,26 @@
 'use client';
 
-import {useState} from 'react';
-import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
-import {Button} from '@/components/ui/button';
-import {Input} from '@/components/ui/input';
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@/components/ui/select';
-import {Label} from "@/components/ui/label";
-import {useToast} from "@/hooks/use-toast";
+import { useEffect, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+
+interface PricingOption {
+  pricing_id: number;
+  marketing: string;
+  utility: string;
+  authentication: string;
+}
+
+interface EmbeddedUser {
+  id: number;
+  waba_id: string;
+  number_id: string;
+  phone_number: string;
+}
 
 export default function UserManagementPage() {
   const [email, setEmail] = useState('');
@@ -17,10 +31,51 @@ export default function UserManagementPage() {
   const [phoneNumberId, setPhoneNumberId] = useState('');
   const [message, setMessage] = useState<string | null>(null);
 
-  const {toast} = useToast();
-  
+  const [pricingOptions, setPricingOptions] = useState<PricingOption[]>([]);
+  const [embeddedUsers, setEmbeddedUsers] = useState<EmbeddedUser[]>([]);
 
-  const handleSubmit = () => {
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchPricing = async () => {
+      const res = await fetch('https://dev-portal.whatsappalerts.com:3007/api/v1/user/pricing', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_AUTH_TOKEN}`
+        },
+        body: JSON.stringify({})
+      });
+      const data = await res.json();
+      setPricingOptions(data.data || []);
+    };
+
+    const fetchEmbeddedUsers = async () => {
+      const res = await fetch('https://dev-portal.whatsappalerts.com:3007/api/v1/user/embedded-users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_AUTH_TOKEN}`
+        },
+        body: JSON.stringify({})
+      });
+      const data = await res.json();
+      setEmbeddedUsers(data.data || []);
+    };
+
+    fetchPricing();
+    fetchEmbeddedUsers();
+  }, []);
+
+  const handlePhoneSelect = (id: string) => {
+    const selected = embeddedUsers.find(u => u.id.toString() === id);
+    if (selected) {
+      setWabaId(selected.waba_id);
+      setPhoneNumberId(selected.number_id);
+    }
+  };
+
+  const handleSubmit = async () => {
     if (!email || !password || !name || !pricingTier || !wabaId || !phoneNumberId) {
       setMessage('Please fill in all fields.');
       toast({
@@ -31,29 +86,48 @@ export default function UserManagementPage() {
       return;
     }
 
-    // Simulate form submission
-    console.log('Form submitted:', {
-      email,
-      password,
-      name,
-      pricingTier,
-      wabaId,
-      phoneNumberId,
-    });
-    setMessage('User created successfully!');
+    try {
+      const res = await fetch('https://dev-portal.whatsappalerts.com:3007/api/v1/user/insert-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_AUTH_TOKEN}`
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          name,
+          wa_pricing: parseInt(pricingTier),
+          balance: 0,
+          waba_id: wabaId,
+          phone_number_id: phoneNumberId,
+          status: 1,
+          role: 'user'
+        }),
+      });
 
-    toast({
-      title: "User Created",
-      description: "User created successfully!",
-    });
+      if (!res.ok) throw new Error('Failed to create user');
+      const result = await res.json();
 
-    // Clear the form fields
-    setEmail('');
-    setPassword('');
-    setName('');
-    setPricingTier('');
-    setWabaId('');
-    setPhoneNumberId('');
+      setMessage('User created successfully!');
+      toast({
+        title: "User Created",
+        description: "User created successfully!",
+      });
+
+      setEmail('');
+      setPassword('');
+      setName('');
+      setPricingTier('');
+      setWabaId('');
+      setPhoneNumberId('');
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create user.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -63,62 +137,48 @@ export default function UserManagementPage() {
           <CardTitle>Create New User</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col space-y-4">
-          <Label htmlFor="email">Email:</Label>
-          <Input
-            type="email"
-            id="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            placeholder="Enter email"
-          />
+          <Label>Email:</Label>
+          <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Enter email" />
 
-          <Label htmlFor="password">Password:</Label>
-          <Input
-            type="password"
-            id="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            placeholder="Enter password"
-          />
+          <Label>Password:</Label>
+          <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Enter password" />
 
-          <Label htmlFor="name">Name:</Label>
-          <Input
-            type="text"
-            id="name"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            placeholder="Enter name"
-          />
+          <Label>Name:</Label>
+          <Input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Enter name" />
 
-          <Label htmlFor="pricingTier">Pricing Tier:</Label>
+          <Label>Pricing Tier:</Label>
           <Select onValueChange={setPricingTier}>
             <SelectTrigger>
-              <SelectValue placeholder="Select a pricing tier" />
+              <SelectValue placeholder="Select pricing tier" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="basic">Basic</SelectItem>
-              <SelectItem value="standard">Standard</SelectItem>
-              <SelectItem value="premium">Premium</SelectItem>
+              {pricingOptions.map(p => (
+                <SelectItem key={p.pricing_id} value={p.pricing_id.toString()}>
+                  ID {p.pricing_id} — Marketing: ₹{p.marketing}, Utility: ₹{p.utility}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
 
-          <Label htmlFor="wabaId">WABA ID:</Label>
-          <Input
-            type="text"
-            id="wabaId"
-            value={wabaId}
-            onChange={e => setWabaId(e.target.value)}
-            placeholder="Enter WABA ID"
-          />
+          <Label>Select Phone Number:</Label>
+          <Select onValueChange={handlePhoneSelect}>
+            <SelectTrigger>
+              <SelectValue placeholder="Choose number to auto-fill WABA & Phone ID" />
+            </SelectTrigger>
+            <SelectContent>
+              {embeddedUsers.map(e => (
+                <SelectItem key={e.id} value={e.id.toString()}>
+                  {e.phone_number}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-          <Label htmlFor="phoneNumberId">Phone Number ID:</Label>
-          <Input
-            type="text"
-            id="phoneNumberId"
-            value={phoneNumberId}
-            onChange={e => setPhoneNumberId(e.target.value)}
-            placeholder="Enter Phone Number ID"
-          />
+          <Label>WABA ID:</Label>
+          <Input type="text" value={wabaId} onChange={e => setWabaId(e.target.value)} placeholder="WABA ID" readOnly />
+
+          <Label>Phone Number ID:</Label>
+          <Input type="text" value={phoneNumberId} onChange={e => setPhoneNumberId(e.target.value)} placeholder="Phone Number ID" readOnly />
 
           <Button onClick={handleSubmit}>Create User</Button>
 

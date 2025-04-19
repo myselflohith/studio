@@ -1,20 +1,19 @@
 'use client';
 
-import {useState} from 'react';
-import {Switch} from '@/components/ui/switch';
-import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
-import {useToast} from "@/hooks/use-toast";
+import { useState, useEffect } from 'react';
+import { Switch } from '@/components/ui/switch';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {Input} from "@/components/ui/input";
-import {Button} from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/icons";
 
 interface User {
@@ -28,131 +27,219 @@ interface User {
 
 interface Campaign {
   id: string;
-  date: string;
-  templateName: string;
-  read: number;
-  sent: number;
-  delivered: number;
-  failed: number;
-  pending: number;
-  status: string;
+  name: string;
+  description: string;
+  created_at: string;
+  platform: string;
+  status: string | null;
+  whatsapp_template_name: string | null;
 }
 
 interface Payment {
-  id: string;
-  method: string;
-  type: 'credit' | 'debit' | 'refund';
-  amount: number;
-  campaignId: string;
-  date: string;
+  payment_id: number;
+  user_id: number;
+  payment_method: string;
+  payment_date: string;
+  transaction_type: string;
+  amount: string;
+  campaign_id: number;
 }
 
-const mockUsers: User[] = [
-  {id: '1', name: 'John Doe', isActive: true, email: 'john.doe@example.com', wabaId: 'waba123', phoneNumberId: 'phone123'},
-  {id: '2', name: 'Jane Smith', isActive: false, email: 'jane.smith@example.com', wabaId: 'waba456', phoneNumberId: 'phone456'},
-  {id: '3', name: 'Alice Johnson', isActive: true, email: 'alice.johnson@example.com', wabaId: 'waba789', phoneNumberId: 'phone789'},
-];
-
-const mockCampaigns: Campaign[] = [
-  {id: 'campaign1', date: '2024-07-20', templateName: 'Template A', read: 100, sent: 200, delivered: 180, failed: 5, pending: 15, status: 'Completed'},
-  {id: 'campaign2', date: '2024-07-21', templateName: 'Template B', read: 150, sent: 250, delivered: 220, failed: 10, pending: 20, status: 'In Progress'},
-  {id: 'campaign3', date: '2024-07-22', templateName: 'Template C', read: 120, sent: 220, delivered: 200, failed: 2, pending: 18, status: 'Completed'},
-  {id: 'campaign4', date: '2024-07-23', templateName: 'Template D', read: 130, sent: 230, delivered: 210, failed: 7, pending: 13, status: 'Completed'},
-  {id: 'campaign5', date: '2024-07-24', templateName: 'Template E', read: 140, sent: 240, delivered: 225, failed: 3, pending: 12, status: 'In Progress'},
-  {id: 'campaign6', date: '2024-07-25', templateName: 'Template F', read: 110, sent: 210, delivered: 190, failed: 6, pending: 14, status: 'Completed'},
-  {id: 'campaign7', date: '2024-07-26', templateName: 'Template G', read: 160, sent: 260, delivered: 240, failed: 9, pending: 11, status: 'In Progress'},
-  {id: 'campaign8', date: '2024-07-27', templateName: 'Template H', read: 125, sent: 235, delivered: 205, failed: 4, pending: 16, status: 'Completed'},
-  {id: 'campaign9', date: '2024-07-28', templateName: 'Template I', read: 135, sent: 245, delivered: 215, failed: 8, pending: 17, status: 'In Progress'},
-  {id: 'campaign10', date: '2024-07-29', templateName: 'Template J', read: 145, sent: 255, delivered: 230, failed: 1, pending: 24, status: 'Completed'},
-];
-
-const mockPayments: Payment[] = [
-  {id: 'payment1', method: 'Credit Card', type: 'credit', amount: 50, campaignId: 'campaign1', date: '2024-07-20'},
-  {id: 'payment2', method: 'PayPal', type: 'debit', amount: 30, campaignId: 'campaign2', date: '2024-07-21'},
-  {id: 'payment3', method: 'Credit Card', type: 'refund', amount: 20, campaignId: 'campaign3', date: '2024-07-22'},
-  {id: 'payment4', method: 'Credit Card', type: 'credit', amount: 60, campaignId: 'campaign4', date: '2024-07-23'},
-  {id: 'payment5', method: 'PayPal', type: 'debit', amount: 40, campaignId: 'campaign5', date: '2024-07-24'},
-  {id: 'payment6', method: 'Credit Card', type: 'refund', amount: 15, campaignId: 'campaign6', date: '2024-07-25'},
-  {id: 'payment7', method: 'Credit Card', type: 'credit', amount: 55, campaignId: 'campaign7', date: '2024-07-26'},
-  {id: 'payment8', method: 'PayPal', type: 'debit', amount: 25, campaignId: 'campaign8', date: '2024-07-27'},
-  {id: 'payment9', method: 'Credit Card', type: 'refund', amount: 10, campaignId: 'campaign9', date: '2024-07-28'},
-  {id: 'payment10', method: 'Credit Card', type: 'credit', amount: 70, campaignId: 'campaign10', date: '2024-07-29'},
-];
-
-const mockSearchResults = [
-  {campaignId: '123', templateName: 'Promo', status: 'Sent', sentAt: '2024-08-01 10:00', updatedAt: '2024-08-01 10:05'},
-  {campaignId: '456', templateName: 'Update', status: 'Delivered', sentAt: '2024-08-02 14:00', updatedAt: '2024-08-02 14:10'},
-];
-
-const ITEMS_PER_PAGE = 5;
+const ITEMS_PER_PAGE = 10;
 
 export default function ManageUsersPage() {
-  const [users, setUsers] = useState<User[]>(mockUsers);
-  const [message, setMessage] = useState<string | null>(null);
-  const {toast} = useToast();
+  const [users, setUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [searchResults, setSearchResults] = useState(mockSearchResults);
+  const [message, setMessage] = useState<string | null>(null);
+  const { toast } = useToast();
 
-  // Pagination state for campaigns
-  const [campaignCurrentPage, setCampaignCurrentPage] = useState(1);
-  // Pagination state for payments
-  const [paymentCurrentPage, setPaymentCurrentPage] = useState(1);
-    // Pagination state for search results
-  const [searchCurrentPage, setSearchCurrentPage] = useState(1);
+  const [userPage, setUserPage] = useState(1);
+  const [userTotalPages, setUserTotalPages] = useState(1);
+
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [campaignPage, setCampaignPage] = useState(1);
+  const [campaignTotalPages, setCampaignTotalPages] = useState(1);
+
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [paymentPage, setPaymentPage] = useState(1);
+  const [paymentTotalPages, setPaymentTotalPages] = useState(1);
+  const [paymentTotals, setPaymentTotals] = useState({ debit: '0', credit: '0', refund: '0' });
+const [phoneNumber, setPhoneNumber] = useState('');
+const [searchResults, setSearchResults] = useState<any[]>([]);
+const [searchPage, setSearchPage] = useState(1);
+const [searchTotalPages, setSearchTotalPages] = useState(1);
+const [paginatedSearchResults, setPaginatedSearchResults] = useState<any[]>([]);
+
+
+  // Fetch users
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await fetch(process.env.NEXT_PUBLIC_USERS_API as string, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_AUTH_TOKEN}`,
+          },
+          body: JSON.stringify({
+            page: userPage,
+            limit: ITEMS_PER_PAGE,
+          }),
+        });
+
+        const json = await response.json();
+
+        const mappedUsers: User[] = json.data.map((user: any) => ({
+          id: user.id.toString(),
+          name: user.name,
+          email: user.email,
+          isActive: user.status === 1,
+          wabaId: user.waba_id?.toString() || '',
+          phoneNumberId: user.phone_number_id?.toString() || '',
+        }));
+
+        setUsers(mappedUsers);
+        setUserTotalPages(json.pagination?.total_pages || 1);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to fetch user data.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchUsers();
+  }, [userPage]);
+
+  const fetchPhoneSearchResults = async () => {
+  if (!selectedUser || !phoneNumber) {
+    toast({
+      title: "Missing input",
+      description: "Please select a user and enter a phone number.",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  try {
+    const response = await fetch('https://dev-portal.whatsappalerts.com:3007/api/v1/wa/number-report', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.NEXT_PUBLIC_AUTH_TOKEN}`,
+      },
+      body: JSON.stringify({
+        phone_number: phoneNumber,
+        user_id: selectedUser.id,
+      }),
+    });
+
+    const data = await response.json();
+    const results = data.data || [];
+
+    setSearchResults(results);
+    setSearchPage(1);
+    setSearchTotalPages(Math.ceil(results.length / ITEMS_PER_PAGE));
+    setPaginatedSearchResults(results.slice(0, ITEMS_PER_PAGE));
+  } catch (err) {
+    toast({
+      title: "Error",
+      description: "Failed to fetch campaign report.",
+      variant: "destructive",
+    });
+  }
+};
+
+useEffect(() => {
+  const start = (searchPage - 1) * ITEMS_PER_PAGE;
+  const end = start + ITEMS_PER_PAGE;
+  setPaginatedSearchResults(searchResults.slice(start, end));
+}, [searchPage, searchResults]);
+
+
+  
+
+  const fetchCampaigns = async (userId: string, page = 1) => {
+    try {
+      const response = await fetch(
+        `https://dev-portal.whatsappalerts.com:3007/api/v1/templates/get-templates/?page=${page}&limit=10`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_AUTH_TOKEN}`,
+          },
+          body: JSON.stringify({
+            user_id: userId,
+          }),
+        }
+      );
+
+      const data = await response.json();
+      setCampaigns(data.templates || []);
+      setCampaignTotalPages(data.totalPages || 1);
+    } catch (err) {
+      console.error("Error fetching campaigns:", err);
+      toast({
+        title: "Error",
+        description: "Failed to fetch campaign templates.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+
+  const fetchPayments = async (userId: string, page = 1) => {
+    try {
+      const response = await fetch(process.env.NEXT_PUBLIC_PAYMENTS_API as string, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_AUTH_TOKEN}`,
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          page,
+          limit: ITEMS_PER_PAGE,
+        }),
+      });
+
+      const data = await response.json();
+      setPayments(data.data || []);
+      setPaymentTotalPages(data.pagination?.total_pages || 1);
+      setPaymentTotals(data.totals || { debit: '0', credit: '0', refund: '0' });
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch payment data.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUserClick = (user: User) => {
+    setSelectedUser(user);
+    setCampaignPage(1);
+    setPaymentPage(1);
+    fetchCampaigns(user.id, 1);
+    fetchPayments(user.id, 1);
+  };
 
   const handleToggleActive = (userId: string, checked: boolean) => {
     setUsers(
-      users.map(user => {
-        if (user.id === userId) {
-          return {...user, isActive: checked};
-        }
-        return user;
-      })
+      users.map(user => (user.id === userId ? { ...user, isActive: checked } : user))
     );
     setMessage(`User ${userId} is now ${checked ? 'active' : 'inactive'}`);
-
     toast({
       title: "User Status Updated",
       description: `User ${userId} is now ${checked ? 'active' : 'inactive'}`,
     });
   };
 
-  const handleUserClick = (user: User) => {
-    setSelectedUser(user);
-    setCampaignCurrentPage(1); // Reset campaign pagination
-    setPaymentCurrentPage(1); // Reset payment pagination
-    setSearchCurrentPage(1); // Reset search pagination
-  };
-
-  const userCampaigns = selectedUser ? mockCampaigns : [];
-  const userPayments = selectedUser ? mockPayments.filter(payment => userCampaigns.some(campaign => campaign.id === payment.campaignId)) : [];
-
-  const handleSearch = () => {
-    // Implement search logic here
-    console.log(`Searching for phone number: ${phoneNumber}`);
-    // setSearchResults([{campaignId: '123', templateName: 'Template', status: 'Delivered', sentAt: '2024-01-01', updatedAt: '2024-01-01'}])
-    // In a real application, you would fetch data from an API here
-    setSearchCurrentPage(1); // Reset search pagination
-  };
-
-    // Pagination calculation for campaigns
-  const campaignStartIndex = (campaignCurrentPage - 1) * ITEMS_PER_PAGE;
-  const campaignEndIndex = campaignStartIndex + ITEMS_PER_PAGE;
-  const paginatedCampaigns = userCampaigns.slice(campaignStartIndex, campaignEndIndex);
-
-  // Pagination calculation for payments
-  const paymentStartIndex = (paymentCurrentPage - 1) * ITEMS_PER_PAGE;
-  const paymentEndIndex = paymentStartIndex + ITEMS_PER_PAGE;
-  const paginatedPayments = userPayments.slice(paymentStartIndex, paymentEndIndex);
-
-    // Pagination calculation for search results
-    const searchStartIndex = (searchCurrentPage - 1) * ITEMS_PER_PAGE;
-    const searchEndIndex = searchStartIndex + ITEMS_PER_PAGE;
-    const paginatedSearchResults = searchResults.slice(searchStartIndex, searchEndIndex);
-
   return (
     <div className="container mx-auto py-10 grid gap-4">
+      {/* Users Table */}
       <Card>
         <CardHeader>
           <CardTitle>Manage Users</CardTitle>
@@ -186,190 +273,190 @@ export default function ManageUsersPage() {
               ))}
             </TableBody>
           </Table>
-          {message && <p className="text-sm text-green-500">{message}</p>}
+          {message && <p className="text-sm text-green-500 mt-2">{message}</p>}
+          <div className="flex justify-between items-center mt-4">
+            <Button onClick={() => setUserPage(p => Math.max(p - 1, 1))} disabled={userPage === 1} variant="outline" size="sm">
+              <Icons.chevronDown className="h-4 w-4 rotate-270" />
+              Previous
+            </Button>
+            <span>Page {userPage} of {userTotalPages}</span>
+            <Button onClick={() => setUserPage(p => Math.min(p + 1, userTotalPages))} disabled={userPage === userTotalPages} variant="outline" size="sm">
+              Next
+              <Icons.chevronDown className="h-4 w-4 rotate-90" />
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
+      {/* Campaigns Section */}
       {selectedUser && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Campaigns for {selectedUser.name}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>ID</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Created At</TableHead>
+                  <TableHead>Platform</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>WhatsApp Template</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {campaigns.map(c => (
+                  <TableRow key={c.id}>
+                    <TableCell>{c.id}</TableCell>
+                    <TableCell>{c.name}</TableCell>
+                    <TableCell>{c.description}</TableCell>
+                    <TableCell>{new Date(c.created_at).toLocaleDateString()}</TableCell>
+                    <TableCell>{c.platform}</TableCell>
+                    <TableCell>{c.status || '-'}</TableCell>
+                    <TableCell>{c.whatsapp_template_name || '-'}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <div className="flex justify-between items-center mt-4">
+              <Button onClick={() => { setCampaignPage(p => Math.max(p - 1, 1)); fetchCampaigns(selectedUser.id, campaignPage - 1); }} disabled={campaignPage === 1} variant="outline" size="sm">
+                <Icons.chevronDown className="h-4 w-4 rotate-270" />
+                Previous
+              </Button>
+              <span>Page {campaignPage} of {campaignTotalPages}</span>
+              <Button onClick={() => { setCampaignPage(p => Math.min(p + 1, campaignTotalPages)); fetchCampaigns(selectedUser.id, campaignPage + 1); }} disabled={campaignPage === campaignTotalPages} variant="outline" size="sm">
+                Next
+                <Icons.chevronDown className="h-4 w-4 rotate-90" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Payments Section */}
+      {selectedUser && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Payments for {selectedUser.name}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="mb-3 text-sm">
+              <p>Total Credit: Rs. {paymentTotals.credit}</p>
+              <p>Total Debit: Rs. {paymentTotals.debit}</p>
+              <p>Total Refund: Rs. {paymentTotals.refund}</p>
+            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>ID</TableHead>
+                  <TableHead>Method</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Campaign ID</TableHead>
+                  <TableHead>Date</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {payments.map(p => (
+                  <TableRow key={p.payment_id}>
+                    <TableCell>{p.payment_id}</TableCell>
+                    <TableCell>{p.payment_method}</TableCell>
+                    <TableCell>{p.transaction_type}</TableCell>
+                    <TableCell>Rs. {p.amount}</TableCell>
+                    <TableCell>{p.campaign_id}</TableCell>
+                    <TableCell>{new Date(p.payment_date).toLocaleDateString()}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <div className="flex justify-between items-center mt-4">
+              <Button onClick={() => { setPaymentPage(p => Math.max(p - 1, 1)); fetchPayments(selectedUser.id, paymentPage - 1); }} disabled={paymentPage === 1} variant="outline" size="sm">
+                <Icons.chevronDown className="h-4 w-4 rotate-270" />
+                Previous
+              </Button>
+              <span>Page {paymentPage} of {paymentTotalPages}</span>
+              <Button onClick={() => { setPaymentPage(p => Math.min(p + 1, paymentTotalPages)); fetchPayments(selectedUser.id, paymentPage + 1); }} disabled={paymentPage === paymentTotalPages} variant="outline" size="sm">
+                Next
+                <Icons.chevronDown className="h-4 w-4 rotate-90" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {selectedUser && (
+  <Card>
+    <CardHeader>
+      <CardTitle>Search Campaigns by Phone Number</CardTitle>
+    </CardHeader>
+    <CardContent className="space-y-4">
+      <div className="flex gap-2">
+        <Input
+          type="text"
+          placeholder="Enter phone number"
+          value={phoneNumber}
+          onChange={(e) => setPhoneNumber(e.target.value)}
+        />
+        <Button onClick={fetchPhoneSearchResults}>Search</Button>
+      </div>
+
+      {paginatedSearchResults.length > 0 && (
         <>
-          <Card>
-            <CardHeader>
-              <CardTitle>Campaigns for {selectedUser.name}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Campaign ID</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Template Name</TableHead>
-                    <TableHead>Read</TableHead>
-                    <TableHead>Sent</TableHead>
-                    <TableHead>Delivered</TableHead>
-                    <TableHead>Failed</TableHead>
-                    <TableHead>Pending</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {paginatedCampaigns.map(campaign => (
-                    <TableRow key={campaign.id}>
-                      <TableCell>{campaign.id}</TableCell>
-                      <TableCell>{campaign.date}</TableCell>
-                      <TableCell>{campaign.templateName}</TableCell>
-                      <TableCell>{campaign.read}</TableCell>
-                      <TableCell>{campaign.sent}</TableCell>
-                      <TableCell>{campaign.delivered}</TableCell>
-                      <TableCell>{campaign.failed}</TableCell>
-                      <TableCell>{campaign.pending}</TableCell>
-                      <TableCell>{campaign.status}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              <div className="flex justify-between items-center mt-2">
-                  <Button
-                      onClick={() => setCampaignCurrentPage(campaignCurrentPage - 1)}
-                      disabled={campaignCurrentPage === 1}
-                      variant="outline"
-                      size="sm"
-                  >
-                      <Icons.chevronDown className="h-4 w-4 rotate-270" />
-                      Previous
-                  </Button>
-                  <span>Page {campaignCurrentPage} of {Math.ceil(userCampaigns.length / ITEMS_PER_PAGE)}</span>
-                  <Button
-                      onClick={() => setCampaignCurrentPage(campaignCurrentPage + 1)}
-                      disabled={campaignEndIndex >= userCampaigns.length}
-                      variant="outline"
-                      size="sm"
-                  >
-                      Next
-                      <Icons.chevronDown className="h-4 w-4 rotate-90" />
-                  </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Campaign ID</TableHead>
+                <TableHead>Template Name</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Sent At</TableHead>
+                <TableHead>Updated At</TableHead>
+                <TableHead>WhatsApp Template</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedSearchResults.map((res) => (
+                <TableRow key={res.campaign_id}>
+                  <TableCell>{res.campaign_id}</TableCell>
+                  <TableCell>{res.template_name}</TableCell>
+                  <TableCell>{res.status}</TableCell>
+                  <TableCell>{new Date(res.sent_at).toLocaleString()}</TableCell>
+                  <TableCell>{new Date(res.updated_at).toLocaleString()}</TableCell>
+                  <TableCell>{res.wa_template_name || '-'}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Payments for {selectedUser.name}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Payment ID</TableHead>
-                    <TableHead>Method</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Campaign ID</TableHead>
-                    <TableHead>Date</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {paginatedPayments.map(payment => (
-                    <TableRow key={payment.id}>
-                      <TableCell>{payment.id}</TableCell>
-                      <TableCell>{payment.method}</TableCell>
-                      <TableCell>{payment.type}</TableCell>
-                      <TableCell>{payment.amount}</TableCell>
-                      <TableCell>{payment.campaignId}</TableCell>
-                      <TableCell>{payment.date}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              <div className="flex justify-between items-center mt-2">
-                  <Button
-                      onClick={() => setPaymentCurrentPage(paymentCurrentPage - 1)}
-                      disabled={paymentCurrentPage === 1}
-                      variant="outline"
-                      size="sm"
-                  >
-                      <Icons.chevronDown className="h-4 w-4 rotate-270" />
-                      Previous
-                  </Button>
-                  <span>Page {paymentCurrentPage} of {Math.ceil(userPayments.length / ITEMS_PER_PAGE)}</span>
-                  <Button
-                      onClick={() => setPaymentCurrentPage(paymentCurrentPage + 1)}
-                      disabled={paymentEndIndex >= userPayments.length}
-                      variant="outline"
-                      size="sm"
-                  >
-                      Next
-                      <Icons.chevronDown className="h-4 w-4 rotate-90" />
-                  </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Search Campaigns by Phone Number</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col space-y-4">
-              <Input
-                type="text"
-                placeholder="Enter Phone Number"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-              />
-              <Button onClick={handleSearch}>Search</Button>
-
-              {searchResults.length > 0 && (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Campaign ID</TableHead>
-                      <TableHead>Template Name</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Sent At</TableHead>
-                      <TableHead>Updated At</TableHead>
-                      <TableHead>Chat Preview</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {paginatedSearchResults.map((result) => (
-                      <TableRow key={result.campaignId}>
-                        <TableCell>{result.campaignId}</TableCell>
-                        <TableCell>{result.templateName}</TableCell>
-                        <TableCell>{result.status}</TableCell>
-                        <TableCell>{result.sentAt}</TableCell>
-                        <TableCell>{result.updatedAt}</TableCell>
-                        <TableCell>
-                          <Button>View</Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-               <div className="flex justify-between items-center mt-2">
-                      <Button
-                          onClick={() => setSearchCurrentPage(searchCurrentPage - 1)}
-                          disabled={searchCurrentPage === 1}
-                          variant="outline"
-                          size="sm"
-                      >
-                          <Icons.chevronDown className="h-4 w-4 rotate-270" />
-                          Previous
-                      </Button>
-                      <span>Page {searchCurrentPage} of {Math.ceil(searchResults.length / ITEMS_PER_PAGE)}</span>
-                      <Button
-                          onClick={() => setSearchCurrentPage(searchCurrentPage + 1)}
-                          disabled={searchEndIndex >= searchResults.length}
-                          variant="outline"
-                          size="sm"
-                      >
-                          Next
-                          <Icons.chevronDown className="h-4 w-4 rotate-90" />
-                      </Button>
-                  </div>
-            </CardContent>
-          </Card>
+          <div className="flex justify-between items-center mt-4">
+            <Button
+              onClick={() => setSearchPage(p => Math.max(p - 1, 1))}
+              disabled={searchPage === 1}
+              variant="outline"
+              size="sm"
+            >
+              <Icons.chevronDown className="h-4 w-4 rotate-270" />
+              Previous
+            </Button>
+            <span>Page {searchPage} of {searchTotalPages}</span>
+            <Button
+              onClick={() => setSearchPage(p => Math.min(p + 1, searchTotalPages))}
+              disabled={searchPage === searchTotalPages}
+              variant="outline"
+              size="sm"
+            >
+              Next
+              <Icons.chevronDown className="h-4 w-4 rotate-90" />
+            </Button>
+          </div>
         </>
       )}
+    </CardContent>
+  </Card>
+)}
+
     </div>
   );
 }
