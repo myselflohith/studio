@@ -15,6 +15,13 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/icons";
+import {
+  TEMPLATES_API,
+  NUMBER_REPORT_API,
+  PAYMENTS_API,
+  USERS_API,
+} from '@/lib/api-endpoints';
+
 
 interface User {
   id: string;
@@ -64,18 +71,18 @@ export default function ManageUsersPage() {
   const [paymentPage, setPaymentPage] = useState(1);
   const [paymentTotalPages, setPaymentTotalPages] = useState(1);
   const [paymentTotals, setPaymentTotals] = useState({ debit: '0', credit: '0', refund: '0' });
-const [phoneNumber, setPhoneNumber] = useState('');
-const [searchResults, setSearchResults] = useState<any[]>([]);
-const [searchPage, setSearchPage] = useState(1);
-const [searchTotalPages, setSearchTotalPages] = useState(1);
-const [paginatedSearchResults, setPaginatedSearchResults] = useState<any[]>([]);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchPage, setSearchPage] = useState(1);
+  const [searchTotalPages, setSearchTotalPages] = useState(1);
+  const [paginatedSearchResults, setPaginatedSearchResults] = useState<any[]>([]);
 
 
   // Fetch users
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await fetch(process.env.NEXT_PUBLIC_USERS_API as string, {
+        const response = await fetch(USERS_API as string, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -113,57 +120,56 @@ const [paginatedSearchResults, setPaginatedSearchResults] = useState<any[]>([]);
   }, [userPage]);
 
   const fetchPhoneSearchResults = async () => {
-  if (!selectedUser || !phoneNumber) {
-    toast({
-      title: "Missing input",
-      description: "Please select a user and enter a phone number.",
-      variant: "destructive",
-    });
-    return;
-  }
+    if (!selectedUser || !phoneNumber) {
+      toast({
+        title: "Missing input",
+        description: "Please select a user and enter a phone number.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-  try {
-    const response = await fetch('https://dev-portal.whatsappalerts.com:3007/api/v1/wa/number-report', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${process.env.NEXT_PUBLIC_AUTH_TOKEN}`,
-      },
-      body: JSON.stringify({
-        phone_number: phoneNumber,
-        user_id: selectedUser.id,
-      }),
-    });
+    try {
+      const response = await fetch(NUMBER_REPORT_API as string, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_AUTH_TOKEN}`,
+        },
+        body: JSON.stringify({
+          phone_number: phoneNumber,
+          user_id: selectedUser.id,
+        }),
+      });
 
-    const data = await response.json();
-    const results = data.data || [];
+      const data = await response.json();
+      const results = data.data || [];
 
-    setSearchResults(results);
-    setSearchPage(1);
-    setSearchTotalPages(Math.ceil(results.length / ITEMS_PER_PAGE));
-    setPaginatedSearchResults(results.slice(0, ITEMS_PER_PAGE));
-  } catch (err) {
-    toast({
-      title: "Error",
-      description: "Failed to fetch campaign report.",
-      variant: "destructive",
-    });
-  }
-};
+      setSearchResults(results);
+      setSearchPage(1);
+      setSearchTotalPages(Math.ceil(results.length / ITEMS_PER_PAGE));
+      setPaginatedSearchResults(results.slice(0, ITEMS_PER_PAGE));
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch campaign report.",
+        variant: "destructive",
+      });
+    }
+  };
 
-useEffect(() => {
-  const start = (searchPage - 1) * ITEMS_PER_PAGE;
-  const end = start + ITEMS_PER_PAGE;
-  setPaginatedSearchResults(searchResults.slice(start, end));
-}, [searchPage, searchResults]);
+  useEffect(() => {
+    const start = (searchPage - 1) * ITEMS_PER_PAGE;
+    const end = start + ITEMS_PER_PAGE;
+    setPaginatedSearchResults(searchResults.slice(start, end));
+  }, [searchPage, searchResults]);
 
 
-  
 
   const fetchCampaigns = async (userId: string, page = 1) => {
     try {
       const response = await fetch(
-        `https://dev-portal.whatsappalerts.com:3007/api/v1/templates/get-templates/?page=${page}&limit=10`,
+        `${TEMPLATES_API}/?page=${page}&limit=10`,
         {
           method: 'POST',
           headers: {
@@ -188,11 +194,11 @@ useEffect(() => {
       });
     }
   };
-  
+
 
   const fetchPayments = async (userId: string, page = 1) => {
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_PAYMENTS_API as string, {
+      const response = await fetch(PAYMENTS_API as string, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -388,75 +394,76 @@ useEffect(() => {
       )}
 
       {selectedUser && (
-  <Card>
-    <CardHeader>
-      <CardTitle>Search Campaigns by Phone Number</CardTitle>
-    </CardHeader>
-    <CardContent className="space-y-4">
-      <div className="flex gap-2">
-        <Input
-          type="text"
-          placeholder="Enter phone number"
-          value={phoneNumber}
-          onChange={(e) => setPhoneNumber(e.target.value)}
-        />
-        <Button onClick={fetchPhoneSearchResults}>Search</Button>
-      </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Search Campaigns by Phone Number</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex gap-2">
+              <Input
+                type="text"
+                placeholder="Enter phone number"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+              />
+              <Button onClick={fetchPhoneSearchResults}>Search</Button>
+            </div>
 
-      {paginatedSearchResults.length > 0 && (
-        <>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Campaign ID</TableHead>
-                <TableHead>Template Name</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Sent At</TableHead>
-                <TableHead>Updated At</TableHead>
-                <TableHead>WhatsApp Template</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedSearchResults.map((res) => (
-                <TableRow key={res.campaign_id}>
-                  <TableCell>{res.campaign_id}</TableCell>
-                  <TableCell>{res.template_name}</TableCell>
-                  <TableCell>{res.status}</TableCell>
-                  <TableCell>{new Date(res.sent_at).toLocaleString()}</TableCell>
-                  <TableCell>{new Date(res.updated_at).toLocaleString()}</TableCell>
-                  <TableCell>{res.wa_template_name || '-'}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+            {paginatedSearchResults.length > 0 && (
+              <>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Campaign ID</TableHead>
+                      <TableHead>Template Name</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Sent At</TableHead>
+                      <TableHead>Updated At</TableHead>
+                      <TableHead>WhatsApp Template</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedSearchResults.map((res) => (
+                      <TableRow key={res.campaign_id}>
+                        <TableCell>{res.campaign_id}</TableCell>
+                        <TableCell>{res.template_name}</TableCell>
+                        <TableCell>{res.status}</TableCell>
+                        <TableCell>{new Date(res.sent_at).toLocaleString()}</TableCell>
+                        <TableCell>{new Date(res.updated_at).toLocaleString()}</TableCell>
+                        <TableCell>{res.wa_template_name || '-'}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
 
-          <div className="flex justify-between items-center mt-4">
-            <Button
-              onClick={() => setSearchPage(p => Math.max(p - 1, 1))}
-              disabled={searchPage === 1}
-              variant="outline"
-              size="sm"
-            >
-              <Icons.chevronDown className="h-4 w-4 rotate-270" />
-              Previous
-            </Button>
-            <span>Page {searchPage} of {searchTotalPages}</span>
-            <Button
-              onClick={() => setSearchPage(p => Math.min(p + 1, searchTotalPages))}
-              disabled={searchPage === searchTotalPages}
-              variant="outline"
-              size="sm"
-            >
-              Next
-              <Icons.chevronDown className="h-4 w-4 rotate-90" />
-            </Button>
-          </div>
-        </>
+                <div className="flex justify-between items-center mt-4">
+                  <Button
+                    onClick={() => setSearchPage(p => Math.max(p - 1, 1))}
+                    disabled={searchPage === 1}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <Icons.chevronDown className="h-4 w-4 rotate-270" />
+                    Previous
+                  </Button>
+                  <span>Page {searchPage} of {searchTotalPages}</span>
+                  <Button
+                    onClick={() => setSearchPage(p => Math.min(p + 1, searchTotalPages))}
+                    disabled={searchPage === searchTotalPages}
+                    variant="outline"
+                    size="sm"
+                  >
+                    Next
+                    <Icons.chevronDown className="h-4 w-4 rotate-90" />
+                  </Button>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
       )}
-    </CardContent>
-  </Card>
-)}
 
     </div>
   );
 }
+

@@ -7,6 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import {
+  PRICING_API,
+  EMBEDDED_USERS_API,
+  INSERT_USER_API,
+} from '@/lib/api-endpoints';
 
 interface PricingOption {
   pricing_id: number;
@@ -38,7 +43,7 @@ export default function UserManagementPage() {
 
   useEffect(() => {
     const fetchPricing = async () => {
-      const res = await fetch('https://dev-portal.whatsappalerts.com:3007/api/v1/user/pricing', {
+      const res = await fetch(PRICING_API as string, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -51,7 +56,7 @@ export default function UserManagementPage() {
     };
 
     const fetchEmbeddedUsers = async () => {
-      const res = await fetch('https://dev-portal.whatsappalerts.com:3007/api/v1/user/embedded-users', {
+      const res = await fetch(EMBEDDED_USERS_API as string, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -87,7 +92,7 @@ export default function UserManagementPage() {
     }
 
     try {
-      const res = await fetch('https://dev-portal.whatsappalerts.com:3007/api/v1/user/insert-user', {
+      const res = await fetch(INSERT_USER_API as string, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

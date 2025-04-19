@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -26,6 +25,12 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import {
+  USERS_API,
+  PAYMENTS_API,
+  USER_BALANCE_API,
+  ADD_BALANCE_API,
+} from '@/lib/api-endpoints';
 
 interface User {
   id: string;
@@ -63,7 +68,7 @@ export default function AddBalancePage() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await fetch(process.env.NEXT_PUBLIC_USERS_API as string, {
+        const response = await fetch(USERS_API as string, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -100,7 +105,7 @@ export default function AddBalancePage() {
 
     const fetchTransactions = async () => {
       try {
-        const response = await fetch(process.env.NEXT_PUBLIC_PAYMENTS_API as string, {
+        const response = await fetch(PAYMENTS_API as string, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -127,7 +132,7 @@ export default function AddBalancePage() {
 
     const fetchAvailableBalance = async () => {
       try {
-        const res = await fetch('https://dev-portal.whatsappalerts.com:3007/api/v1/user/balance', {
+        const res = await fetch(USER_BALANCE_API as string, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -164,7 +169,7 @@ export default function AddBalancePage() {
     }
 
     try {
-      const response = await fetch('https://dev-portal.whatsappalerts.com:3007/api/v1/user/add-balance', {
+      const response = await fetch(ADD_BALANCE_API as string, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
