@@ -38,6 +38,10 @@ export default function LoginPage() {
         if (token) {
           document.cookie = `token=${token}; path=/; max-age=3600`;
           router.push('/');
+          toast({
+            title: "Success",
+            description: "Login successful!",
+          });
         } else {
           setError('Login failed: Token not received');
           toast({
