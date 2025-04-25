@@ -1,5 +1,5 @@
 // src/lib/api-endpoints.ts
-export const BASE_URL = process.env.BASE_URL;
+export const BASE_URL="https://dev-portal.whatsappalerts.com:3007/api/v1"
 
 export const USERS_API = `${BASE_URL}/user/users`;
 export const PAYMENTS_API = `${BASE_URL}/user/payments`;
