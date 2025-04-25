@@ -1,4 +1,4 @@
-'use client';
+'use server';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { LOGIN_API } from '@/lib/api-endpoints';
 import { useToast } from "@/hooks/use-toast";
-import { setCookie } from 'cookies-next';
+import { cookies } from 'next/headers';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -37,7 +37,7 @@ export default function LoginPage() {
       if (response.ok) {
         const token = data.token;
         if (token) {
-          setCookie('token', token);
+          cookies().set('token', token);
           router.push('/');
           toast({
             title: "Success",
@@ -105,4 +105,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
