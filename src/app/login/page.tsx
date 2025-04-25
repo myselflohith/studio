@@ -6,21 +6,61 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { LOGIN_API } from '@/lib/api-endpoints';
+import { useToast } from "@/hooks/use-toast";
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (email === 'test@example.com' && password === 'password') {
-      document.cookie = 'token=dummy_token; path=/; max-age=3600';
-      router.push('/');
-    } else {
-      setError('Invalid credentials');
+    try {
+      const response = await fetch(LOGIN_API as string, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        const token = data.token;
+        if (token) {
+          document.cookie = `token=${token}; path=/; max-age=3600`;
+          router.push('/');
+        } else {
+          setError('Login failed: Token not received');
+          toast({
+            title: "Error",
+            description: "Login failed: Token not received",
+            variant: "destructive",
+          });
+        }
+      } else {
+        setError(data.message || 'Invalid credentials');
+        toast({
+          title: "Error",
+          description: data.message || 'Invalid credentials',
+          variant: "destructive",
+        });
+      }
+    } catch (e: any) {
+      setError(e.message || 'An unexpected error occurred');
+      toast({
+        title: "Error",
+        description: e.message || 'An unexpected error occurred',
+        variant: "destructive",
+      });
     }
   };
 
@@ -39,7 +79,7 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="test@example.com"
+                placeholder="Enter email"
               />
             </div>
             <div className="grid gap-2">
@@ -49,7 +89,7 @@ export default function LoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="password"
+                placeholder="Enter password"
               />
             </div>
             {error && <p className="text-red-500">{error}</p>}
@@ -60,3 +100,4 @@ export default function LoginPage() {
     </div>
   );
 }
+
