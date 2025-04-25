@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { LOGIN_API } from '@/lib/api-endpoints';
 import { useToast } from "@/hooks/use-toast";
+import Cookies from 'js-cookie';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -16,58 +17,50 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError('');
 
-    try {
-      const response = await fetch(LOGIN_API as string, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: email,
-          password: password,
-        }),
+  try {
+    const response = await fetch(LOGIN_API as string, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = await response.json();
+    console.log("Login response:", data); // ✅
+
+    if (response.ok && data.token) {
+      Cookies.set('token', data.token, {
+        expires: 7,
+        sameSite: 'Lax',
       });
 
-      const data = await response.json();
+      toast({
+        title: "Success",
+        description: "Login successful!",
+      });
 
-      if (response.ok) {
-        const token = data.token;
-        if (token) {
-          localStorage.setItem('token', token);
-          router.push('/');
-          toast({
-            title: "Success",
-            description: "Login successful!",
-          });
-        } else {
-          setError('Login failed: Token not received');
-          toast({
-            title: "Error",
-            description: "Login failed: Token not received",
-            variant: "destructive",
-          });
-        }
-      } else {
-        setError(data.message || 'Invalid credentials');
-        toast({
-          title: "Error",
-          description: data.message || 'Invalid credentials',
-          variant: "destructive",
-        });
-      }
-    } catch (e: any) {
-      setError(e.message || 'An unexpected error occurred');
+      router.push('/');
+    } else {
+      setError(data.message || 'Invalid credentials');
       toast({
         title: "Error",
-        description: e.message || 'An unexpected error occurred',
+        description: data.message || 'Invalid credentials',
         variant: "destructive",
       });
     }
-  };
-
+  } catch (err: any) {
+    console.error("Login error:", err);
+    setError(err.message || 'Something went wrong');
+    toast({
+      title: "Error",
+      description: err.message || 'Something went wrong',
+      variant: "destructive",
+    });
+  }
+};
   return (
     <div className="grid h-screen place-items-center">
       <Card className="w-[450px]">
