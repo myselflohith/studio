@@ -37,7 +37,7 @@ export default function LoginPage() {
       if (response.ok) {
         const token = data.token;
         if (token) {
-          cookies().set('token', token);
+          cookies().set('token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', path: '/' });
           router.push('/');
           toast({
             title: "Success",
