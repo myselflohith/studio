@@ -8,28 +8,46 @@ import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
 import Link from "next/link";
 import {Button} from "@/components/ui/button";
 import { useRouter } from 'next/navigation';
-import { cookies } from 'next/headers';
+import { useToast } from "@/hooks/use-toast";
+
+
+function AuthCheck({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/login');
+      toast({
+        title: "Not authenticated",
+        description: "Please login to continue",
+        variant: "destructive",
+      });
+    }
+  }, [router, toast]);
+
+  return <>{children}</>;
+}
 
 export function WabaManagerDashboard() {
   const [activeTab, setActiveTab] = useState("analytics");
-   const router = useRouter();
-
-  useEffect(() => {
-    const token = cookies().get('token')?.value;
-    if (!token) {
-      router.push('/login');
-    }
-  }, [router]);
+  const router = useRouter();
 
   useEffect(() => {
     console.log(`Active Tab: ${activeTab}`);
   }, [activeTab]);
 
   return (
+    <AuthCheck>
     <div className="container mx-auto py-10">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-2xl font-bold">WABA Manager</CardTitle>
+          <Button variant="outline" onClick={() => {
+            localStorage.removeItem('token');
+            router.push('/login');
+          }}>Logout</Button>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="analytics" className="w-full">
@@ -88,5 +106,7 @@ export function WabaManagerDashboard() {
         </CardContent>
       </Card>
     </div>
+    </AuthCheck>
   );
 }
+
