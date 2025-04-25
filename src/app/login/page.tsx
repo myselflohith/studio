@@ -36,7 +36,7 @@ export default function LoginPage() {
       if (response.ok) {
         const token = data.token;
         if (token) {
-          document.cookie = `token=${token}; path=/; max-age=3600`;
+          localStorage.setItem('token', token);
           router.push('/');
           toast({
             title: "Success",

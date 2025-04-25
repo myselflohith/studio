@@ -6,14 +6,17 @@ export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
   const isPublicPath = path === '/login';
+  //const token = request.cookies.get('token')?.value || '';
 
-  const token = request.cookies.get('token')?.value || '';
+  //Check for token in local storage
+  const hasToken = !!request.cookies.get('token')?.value || false;
 
-  if (isPublicPath && token) {
+
+  if (isPublicPath && hasToken) {
     return NextResponse.redirect(new URL('/', request.nextUrl));
   }
 
-  if (!isPublicPath && !token) {
+  if (!isPublicPath && !hasToken) {
     return NextResponse.redirect(new URL('/login', request.nextUrl));
   }
 }
@@ -22,3 +25,4 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: ['/', '/users', '/users/:path*', '/balance', '/balance/:path*'],
 };
+

@@ -43,29 +43,47 @@ export default function UserManagementPage() {
 
   useEffect(() => {
     const fetchPricing = async () => {
-      const res = await fetch(PRICING_API as string, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${process.env.NEXT_PUBLIC_AUTH_TOKEN}`
-        },
-        body: JSON.stringify({})
-      });
-      const data = await res.json();
-      setPricingOptions(data.data || []);
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(PRICING_API as string, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({})
+        });
+        const data = await res.json();
+        setPricingOptions(data.data || []);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to fetch pricing options.",
+          variant: "destructive",
+        });
+      }
     };
 
     const fetchEmbeddedUsers = async () => {
-      const res = await fetch(EMBEDDED_USERS_API as string, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${process.env.NEXT_PUBLIC_AUTH_TOKEN}`
-        },
-        body: JSON.stringify({})
-      });
-      const data = await res.json();
-      setEmbeddedUsers(data.data || []);
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(EMBEDDED_USERS_API as string, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({})
+        });
+        const data = await res.json();
+        setEmbeddedUsers(data.data || []);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to fetch embedded users.",
+          variant: "destructive",
+        });
+      }
     };
 
     fetchPricing();
@@ -92,11 +110,12 @@ export default function UserManagementPage() {
     }
 
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch(INSERT_USER_API as string, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${process.env.NEXT_PUBLIC_AUTH_TOKEN}`
+          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
           email,

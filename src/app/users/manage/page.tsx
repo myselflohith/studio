@@ -82,11 +82,12 @@ export default function ManageUsersPage() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
+        const token = localStorage.getItem('token');
         const response = await fetch(USERS_API as string, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_AUTH_TOKEN}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             page: userPage,
@@ -130,11 +131,12 @@ export default function ManageUsersPage() {
     }
 
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(NUMBER_REPORT_API as string, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${process.env.NEXT_PUBLIC_AUTH_TOKEN}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           phone_number: phoneNumber,
@@ -168,13 +170,14 @@ export default function ManageUsersPage() {
 
   const fetchCampaigns = async (userId: string, page = 1) => {
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(
         `${TEMPLATES_API}/?page=${page}&limit=10`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_AUTH_TOKEN}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             user_id: userId,
@@ -198,11 +201,12 @@ export default function ManageUsersPage() {
 
   const fetchPayments = async (userId: string, page = 1) => {
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(PAYMENTS_API as string, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${process.env.NEXT_PUBLIC_AUTH_TOKEN}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           user_id: userId,
@@ -233,14 +237,33 @@ export default function ManageUsersPage() {
   };
 
   const handleToggleActive = (userId: string, checked: boolean) => {
-    setUsers(
-      users.map(user => (user.id === userId ? { ...user, isActive: checked } : user))
-    );
-    setMessage(`User ${userId} is now ${checked ? 'active' : 'inactive'}`);
-    toast({
-      title: "User Status Updated",
-      description: `User ${userId} is now ${checked ? 'active' : 'inactive'}`,
-    });
+    const token = localStorage.getItem('token');
+    fetch(USERS_API + `/${userId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ status: checked ? 1 : 0 }),
+    })
+      .then(response => response.json())
+      .then(data => {
+        setUsers(
+          users.map(user => (user.id === userId ? { ...user, isActive: checked } : user))
+        );
+        setMessage(`User ${userId} is now ${checked ? 'active' : 'inactive'}`);
+        toast({
+          title: "User Status Updated",
+          description: `User ${userId} is now ${checked ? 'active' : 'inactive'}`,
+        });
+      })
+      .catch(error => {
+        toast({
+          title: "Error",
+          description: "Failed to update user status.",
+          variant: "destructive",
+        });
+      });
   };
 
   return (
@@ -466,4 +489,3 @@ export default function ManageUsersPage() {
     </div>
   );
 }
-

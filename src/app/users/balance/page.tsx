@@ -68,11 +68,12 @@ export default function AddBalancePage() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
+        const token = localStorage.getItem('token');
         const response = await fetch(USERS_API as string, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_AUTH_TOKEN}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ page: 1, limit: 100 }),
         });
@@ -105,11 +106,12 @@ export default function AddBalancePage() {
 
     const fetchTransactions = async () => {
       try {
+        const token = localStorage.getItem('token');
         const response = await fetch(PAYMENTS_API as string, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_AUTH_TOKEN}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             user_id: selectedUserId,
@@ -132,11 +134,12 @@ export default function AddBalancePage() {
 
     const fetchAvailableBalance = async () => {
       try {
+        const token = localStorage.getItem('token');
         const res = await fetch(USER_BALANCE_API as string, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_AUTH_TOKEN}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             user_id: parseInt(selectedUserId),
@@ -169,11 +172,12 @@ export default function AddBalancePage() {
     }
 
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(ADD_BALANCE_API as string, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${process.env.NEXT_PUBLIC_AUTH_TOKEN}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           user_id: parseInt(selectedUserId),
