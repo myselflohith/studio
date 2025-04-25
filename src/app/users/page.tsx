@@ -12,6 +12,7 @@ import {
   EMBEDDED_USERS_API,
   INSERT_USER_API,
 } from '@/lib/api-endpoints';
+import { getCookie } from 'cookies-next';
 
 interface PricingOption {
   pricing_id: number;
@@ -44,7 +45,7 @@ export default function UserManagementPage() {
   useEffect(() => {
     const fetchPricing = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = getCookie('token');
         const res = await fetch(PRICING_API as string, {
           method: 'POST',
           headers: {
@@ -66,7 +67,7 @@ export default function UserManagementPage() {
 
     const fetchEmbeddedUsers = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = getCookie('token');
         const res = await fetch(EMBEDDED_USERS_API as string, {
           method: 'POST',
           headers: {
@@ -110,7 +111,7 @@ export default function UserManagementPage() {
     }
 
     try {
-      const token = localStorage.getItem('token');
+      const token = getCookie('token');
       const res = await fetch(INSERT_USER_API as string, {
         method: 'POST',
         headers: {

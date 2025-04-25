@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
 import {useEffect, useState} from "react";
@@ -7,9 +7,19 @@ import {AnalyticsSummary} from "@/components/AnalyticsSummary";
 import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
 import Link from "next/link";
 import {Button} from "@/components/ui/button";
+import { useRouter } from 'next/navigation';
+import { cookies } from 'next/headers';
 
 export function WabaManagerDashboard() {
   const [activeTab, setActiveTab] = useState("analytics");
+   const router = useRouter();
+
+  useEffect(() => {
+    const token = cookies().get('token')?.value;
+    if (!token) {
+      router.push('/login');
+    }
+  }, [router]);
 
   useEffect(() => {
     console.log(`Active Tab: ${activeTab}`);

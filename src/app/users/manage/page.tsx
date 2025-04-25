@@ -21,6 +21,7 @@ import {
   PAYMENTS_API,
   USERS_API,
 } from '@/lib/api-endpoints';
+import { getCookie } from 'cookies-next';
 
 
 interface User {
@@ -82,7 +83,7 @@ export default function ManageUsersPage() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = getCookie('token');
         const response = await fetch(USERS_API as string, {
           method: 'POST',
           headers: {
@@ -131,7 +132,7 @@ export default function ManageUsersPage() {
     }
 
     try {
-      const token = localStorage.getItem('token');
+      const token = getCookie('token');
       const response = await fetch(NUMBER_REPORT_API as string, {
         method: 'POST',
         headers: {
@@ -170,7 +171,7 @@ export default function ManageUsersPage() {
 
   const fetchCampaigns = async (userId: string, page = 1) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = getCookie('token');
       const response = await fetch(
         `${TEMPLATES_API}/?page=${page}&limit=10`,
         {
@@ -201,7 +202,7 @@ export default function ManageUsersPage() {
 
   const fetchPayments = async (userId: string, page = 1) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = getCookie('token');
       const response = await fetch(PAYMENTS_API as string, {
         method: 'POST',
         headers: {
@@ -237,7 +238,7 @@ export default function ManageUsersPage() {
   };
 
   const handleToggleActive = (userId: string, checked: boolean) => {
-    const token = localStorage.getItem('token');
+    const token = getCookie('token');
     fetch(USERS_API + `/${userId}`, {
       method: 'PUT',
       headers: {

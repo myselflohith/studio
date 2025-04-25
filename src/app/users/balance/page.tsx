@@ -31,6 +31,7 @@ import {
   USER_BALANCE_API,
   ADD_BALANCE_API,
 } from '@/lib/api-endpoints';
+import { getCookie } from 'cookies-next';
 
 interface User {
   id: string;
@@ -68,7 +69,7 @@ export default function AddBalancePage() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = getCookie('token');
         const response = await fetch(USERS_API as string, {
           method: 'POST',
           headers: {
@@ -106,7 +107,7 @@ export default function AddBalancePage() {
 
     const fetchTransactions = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = getCookie('token');
         const response = await fetch(PAYMENTS_API as string, {
           method: 'POST',
           headers: {
@@ -134,7 +135,7 @@ export default function AddBalancePage() {
 
     const fetchAvailableBalance = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = getCookie('token');
         const res = await fetch(USER_BALANCE_API as string, {
           method: 'POST',
           headers: {
@@ -172,7 +173,7 @@ export default function AddBalancePage() {
     }
 
     try {
-      const token = localStorage.getItem('token');
+      const token = getCookie('token');
       const response = await fetch(ADD_BALANCE_API as string, {
         method: 'POST',
         headers: {
