@@ -23,6 +23,6 @@ export function middleware(request: NextRequest) {
 
 // See "Matching Paths" below to learn more
 export const config = {
-  matcher: ['/', '/users', '/users/:path*', '/balance', '/balance/:path*'],
+  matcher: ['/', '/users', '/users/:path*', '/balance', '/balance/:path*','/users/manage','/users/balance'],
 };
 
